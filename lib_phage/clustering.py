@@ -9,6 +9,8 @@ def cluster_proteins(input_fasta_filepath, output_dirpath,
                      cluster_params_coverage = 0.95,
                      verbose=False):
 
+    """Cluster proteins with mmseqs2."""
+
     clustering_filepath = output_dirpath + '/clustering.tsv'
 
     mmseqs_createdb_cmd = 'mmseqs createdb {} {}/SEQDB'.format(input_fasta_filepath, mmseqs_tempdir)

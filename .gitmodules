@@ -1,0 +1,3 @@
+[submodule "submodules/pdf"]
+	path = submodules/pdf
+	url = https://github.com/bioinf-mcb/phage-domains-finder.git

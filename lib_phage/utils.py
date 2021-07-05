@@ -9,6 +9,8 @@ from csb.bio.io import HHOutputParser
 
 def setup_dir_tree(work_dir):
 
+    """Setup all directories used in the pipeline."""
+
     ### function should be commented with dir tree description ###
 
     ### tmp dirs
@@ -42,6 +44,8 @@ def setup_dir_tree(work_dir):
         print('/log/ directory already set up')
 
 def fetch_and_rename_protein_ids(work_dir, clustering_filepath, cds_all_filepath):
+
+    """Rename fasta files from NCBI ids to project internal ids."""
 
     clustering_results = pd.read_csv(clustering_filepath, sep='\t', header=None)
 
@@ -102,6 +106,8 @@ def fetch_and_rename_protein_ids(work_dir, clustering_filepath, cds_all_filepath
     return no_repr_prot, name_table_filepath
 
 def build_hhr_table(work_dir):
+
+    """Build a table of results from hhr files."""
 
     output_hhblits_dirpath = work_dir + 'intermediate/prot-families/all-by-all'
 

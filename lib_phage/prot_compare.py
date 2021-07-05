@@ -6,7 +6,7 @@ import os
 import glob
 
 def save_individual_seqs(work_dir):
-    '''Save each of the renamed sequences into separate file'''
+    '''Save each of the renamed sequences into separate file.'''
 
     repr_prot_seqs_filepath_final = '{}/repr-seqs.fa'.format(work_dir + 'output/prot-families/representative')
     tmp_dir                       = work_dir + 'tmp/all-by-all/individual-seqs/'
@@ -18,8 +18,9 @@ def save_individual_seqs(work_dir):
 
 def run_hhblits(work_dir, hhsuite_bins, hhsuite_scripts, cpu, uniref_db_path, n, mact, p, z, v, b, qid, cov):
 
-    # in general two options: run on queue or in background (no reason to keep notebook open)
+    """Run hhblits in order to build profile for each of the representative proteins."""
 
+    # in general two options: run on queue or in background (no reason to keep notebook open)
     # write bash runfile
     bash_script_filepath   = work_dir + 'tmp/all-by-all/helper-build-profiles.sh'
     output_hhblits_dirpath = work_dir + 'intermediate/prot-families/profiles'
@@ -52,7 +53,11 @@ def run_hhblits(work_dir, hhsuite_bins, hhsuite_scripts, cpu, uniref_db_path, n,
 
 def build_hh_db(work_dir, hhsuite_bins, hhsuite_scripts, verbose=False):
 
+    """Build HH-suite database from profiles of representative sequences."""
+
     def validate_db_creation(work_dir, db_dirpath):
+
+        """Validate if database was created correctly."""
 
         flog = open(work_dir + 'log/hh-db.log', 'w')
         # check files present and not empty
@@ -125,7 +130,11 @@ def build_hh_db(work_dir, hhsuite_bins, hhsuite_scripts, verbose=False):
 
 def run_all_vs_all(work_dir, hhsuite_bins, hhsuite_scripts, cpu, n, p):
 
+    """Run HMM comparison of all representative proteins agains each other."""
+
     def save_log(work_dir, n, p):
+
+        """Save log file: save parameters and set status to running (computations in background)."""
 
         # validate hhblits - save params to log:
         flog = open(work_dir + 'log/hhblits-all-vs-all.log', 'w')
