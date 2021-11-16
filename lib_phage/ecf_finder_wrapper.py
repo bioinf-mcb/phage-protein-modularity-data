@@ -1,6 +1,7 @@
 ### API for domain/ECF finder algorithm ###
 
 import pandas as pd
+import pickle
 
 def load_and_filter_data(work_dir, filters_used, filters_params):
 
@@ -27,6 +28,17 @@ def load_and_filter_data(work_dir, filters_used, filters_params):
         hhr_table = hhr_table.assign(cov = lambda x: (x.qend - x.qstart + 1) / x.qlength)
         hhr_table = hhr_table[hhr_table['cov'] >= filters_params['coverage_cutoff']]
 
+    # by-directional coverage, qcov and scov
+    if 'cov-both' in filters_used:
+        hhr_table = hhr_table.assign(qcov = lambda x: (x.qend - x.qstart + 1) / x.qlength)
+        hhr_table = hhr_table.assign(scov = lambda x: (x.send - x.sstart + 1) / x.slength)
+        hhr_table = hhr_table[hhr_table['qcov'] <= filters_params['coverage_cutoff']]
+        #hhr_table = hhr_table[hhr_table['scov'] <= filters_params['coverage_cutoff']]
+
+    if 'hit-len' in filters_used:
+        hhr_table = hhr_table.assign(hlen = lambda x: (x.qend - x.qstart + 1))
+        hhr_table = hhr_table[hhr_table['hlen'] >= filters_params['min_hit_len']]
+
     # backup self-hits (for singleton nodes creation when needed)
     hhr_self = hhr_table[hhr_table['sname'] == hhr_table['qname']]
 
@@ -42,15 +54,22 @@ def load_and_filter_data(work_dir, filters_used, filters_params):
 
     return hhr_table, annotation_table, dataset_size, id_width
 
-def store_scan_results(work_dir, results):
+def store_scan_results(work_dir, results, mode='txt'):
 
     ecf_out_dirpath = work_dir + 'output/ecf-search/'
-    fecf            = open(ecf_out_dirpath + 'ecfs_results.txt', 'w')
-    fecf.write('qname,ecf_start,ecf_stop\n')
 
-    for prot_id, ecfs in results.items():
-        for ecf in ecfs:
-            fecf.write(','.join([prot_id, str(ecf[0]), str(ecf[1])]) + '\n')
-    fecf.close()
+    if mode == 'txt':
+        fecf = open(ecf_out_dirpath + 'ecfs_results', 'w')
+        fecf.write('qname,ecf_start,ecf_stop\n')
+
+        for prot_id, ecfs in results.items():
+            for ecf in ecfs:
+                fecf.write(','.join([prot_id, str(ecf[0]), str(ecf[1])]) + '\n')
+        fecf.close()
+
+    elif mode == 'pickle':
+        fecf = open(ecf_out_dirpath + 'ecfs_results', 'wb')
+        pickle.dump(results, fecf)
+        fecf.close()
 
     print('Results of ECF scan stored.')

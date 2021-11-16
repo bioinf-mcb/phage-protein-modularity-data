@@ -266,11 +266,11 @@ def validate_output_ECF(work_dir, mode, filters_params, filters_used, clust_eps,
     flog            = open(work_dir + '/log/ecf-search.log', 'w')
 
     # what exactly should be logged and saved in which mode?
-    if mode == 'scan':
+    if (mode == 'scan' or mode == 'scan-min'):
         print('Validating ECF scan results...')
 
-        if os.path.isfile(ecf_out_dirpath + 'ecfs_results.txt'):
-            if os.path.getsize(ecf_out_dirpath + 'ecfs_results.txt') != 0:
+        if os.path.isfile(ecf_out_dirpath + 'ecfs_results'):
+            if os.path.getsize(ecf_out_dirpath + 'ecfs_results') != 0:
                 flog.write('STATUS:OK\n')
 
                 # write params used
