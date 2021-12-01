@@ -16,7 +16,7 @@ def save_individual_seqs(work_dir):
         fasta_filename = record.id + '.fa'
         SeqIO.write(record, tmp_dir + fasta_filename, "fasta")
 
-def run_hhblits(work_dir, hhsuite_bins, hhsuite_scripts, cpu, uniref_db_path, n, mact, p, z, v, b, qid, cov):
+def run_hhblits(work_dir, hhsuite_bins, hhsuite_scripts, cpu, uniref_db_path, n, mact, p, qid, cov):
 
     """Run hhblits in order to build profile for each of the representative proteins."""
 
@@ -32,8 +32,8 @@ def run_hhblits(work_dir, hhsuite_bins, hhsuite_scripts, cpu, uniref_db_path, n,
     cmd0 = '#!/bin/bash\n\n'
     cmd0 = cmd0 + 'export PATH="{}:{}:$PATH"\n\n'.format(hhsuite_bins, hhsuite_scripts)
     cmd1 = 'FILE=$(basename "${1}")\nFILE=${FILE%.*}\n'
-    cmd2 = 'hhblits -cpu {} -i $1 -d {} -o {} -oa3m {} -n {} -mact {} -p {} -z 0 -v 0 -b 0 -qid {} -cov {} &> {}\n'.format(
-           cpu, uniref_db_path, out_hhr, out_a3m, n, mact, p, qid, cov, output)
+    cmd2 = 'hhblits -cpu 1 -i $1 -d {} -o {} -oa3m {} -n {} -mact {} -p {} -z 0 -v 0 -b 0 -qid {} -cov {} &> {}\n'.format(
+           uniref_db_path, out_hhr, out_a3m, n, mact, p, qid, cov, output)
     cmd3 = 'rm -rf {} {}'.format(out_hhr, out_a3m) # to activate add to list below
     fb = open(bash_script_filepath, 'w')
     for cmd in [cmd0, cmd1, cmd2]:
@@ -42,14 +42,10 @@ def run_hhblits(work_dir, hhsuite_bins, hhsuite_scripts, cpu, uniref_db_path, n,
     # set execute mode
     call('chmod a+x ' + bash_script_filepath, shell=True)
 
-    # run script without queue
-    #!FIXME: set option to change -P parameter here
-    run_cmd = 'nohup find {} -name "reprseq*fa" | xargs -P 4 -n 1 {} &'.format(ind_seqs_dirpath, bash_script_filepath)
-    print('DEVEL: hhblits run step omitted for quick check. Uncomment to set on.')
-    # call(run_cmd, shell=True)
-
-    # run with queue
-    #TODO
+    # run script
+    run_cmd = 'nohup find {} -name "reprseq*fa" | xargs -P {} -n 1 {} &'.format(ind_seqs_dirpath, cpu, bash_script_filepath)
+    # print('DEVEL: hhblits run step omitted for quick check. Uncomment to set on.')
+    call(run_cmd, shell=True)
 
 def build_hh_db(work_dir, hhsuite_bins, hhsuite_scripts, verbose=False):
 
@@ -162,8 +158,8 @@ def run_all_vs_all(work_dir, hhsuite_bins, hhsuite_scripts, cpu, n, p, a3m_wildc
     cmd0 = '#!/bin/bash\n\n'
     cmd0 = cmd0 + 'export PATH="{}:{}:$PATH"\n\n'.format(hhsuite_bins, hhsuite_scripts)
     cmd1 = 'FILE=$(basename "${1}")\nFILE=${FILE%.*}\n'
-    cmd2 = '{}/hhblits -cpu {} -i $1 -d {}/all_proteins -o {} -n {} -p {} -z 0 -Z 32000 -v 0 -b 0 -B 32000 &> {}'.format(
-    hhsuite_bins, cpu, db_dirpath, out_hhr, n, p, output)
+    cmd2 = '{}/hhblits -cpu 1 -i $1 -d {}/all_proteins -o {} -n {} -p {} -z 0 -Z 32000 -v 0 -b 0 -B 32000 &> {}'.format(
+    hhsuite_bins, db_dirpath, out_hhr, n, p, output)
 
     fb = open(bash_script_filepath, 'w')
     for cmd in [cmd0, cmd1, cmd2]:
@@ -172,38 +168,7 @@ def run_all_vs_all(work_dir, hhsuite_bins, hhsuite_scripts, cpu, n, p, a3m_wildc
     # set execute mode
     call('chmod a+x ' + bash_script_filepath, shell=True)
 
-    run_cmd = 'nohup find {} -name "{}" | xargs -P 4 -n 1 {} &'.format(ind_profile_dir, a3m_wildcard, bash_script_filepath)
+    run_cmd = 'nohup find {} -name "{}" | xargs -P {} -n 1 {} &'.format(ind_profile_dir, a3m_wildcard, cpu, bash_script_filepath)
     call(run_cmd, shell=True)
 
     save_log(work_dir, n, p)
-
-def run_hhmake(work_dir, hhsuite_bins, hhsuite_scripts, cpu):
-
-    """DEPRECATED"""
-    """Run hhmake in order to build profile for each of the ECFs."""
-
-    # write bash runfile
-    bash_script_filepath   = work_dir + 'tmp/all-by-all/helper-build-profiles-hhmake.sh'
-    output_hhmake_dirpath  = work_dir + 'intermediate/prot-families/profiles'
-    ind_a3ms_dirpath       = work_dir + 'intermediate/prot-families/profiles'
-    out_hhr                = output_hhmake_dirpath + '/${FILE}.hhr'
-    output                 = output_hhmake_dirpath + '/${FILE}.o'
-
-    cmd0 = '#!/bin/bash\n\n'
-    cmd0 = cmd0 + 'export PATH="{}:{}:$PATH"\n\n'.format(hhsuite_bins, hhsuite_scripts)
-    cmd1 = 'FILE=$(basename "${1}")\nFILE=${FILE%.*}\n'
-    cmd2 = 'hhmake -i $1 -o {} -M a3m &> {}\n'.format(out_hhr, output)
-
-    # cmd3 = 'rm -rf {} {}'.format(out_hhr, out_a3m) # to activate add to list below
-    fb = open(bash_script_filepath, 'w')
-    for cmd in [cmd0, cmd1, cmd2]:
-        fb.write(cmd)
-    fb.close()
-    # set execute mode
-    call('chmod a+x ' + bash_script_filepath, shell=True)
-
-    # run script without queue
-    #!FIXME: set option to change -P parameter here
-    run_cmd = 'nohup find {} -name "ecf_reprseq*a3m" | xargs -P {} -n 1 {} &'.format(ind_a3ms_dirpath, cpu, bash_script_filepath)
-    # print(run_cmd)
-    call(run_cmd, shell=True)
