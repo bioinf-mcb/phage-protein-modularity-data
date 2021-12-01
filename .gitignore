@@ -4,3 +4,4 @@ __pycache__
 .DS_Store
 pipeline/hhpredofas_test.ipynb
 pipeline/Phage-DB.ipynb
+pipeline/Workflow-run.ipynb
