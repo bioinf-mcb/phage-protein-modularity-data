@@ -7,6 +7,7 @@ import numpy as np
 from subprocess import call
 from Bio import SeqIO
 from csb.bio.io import HHOutputParser
+from shutil import copyfile
 # from csb.bio.io.hhpred import HHOutputParser
 
 def setup_dir_tree(work_dir):
@@ -18,6 +19,13 @@ def setup_dir_tree(work_dir):
 	### tmp dirs
 	for d in ['tmp', 'tmp/repr-proteins', 'tmp/mmseqs', 'tmp/all-by-all',
 			  'tmp/all-by-all/individual-seqs']:
+		try:
+			os.mkdir(work_dir + d)
+		except FileExistsError:
+			print('/' + d + '/ directory already set up')
+
+	### inputs
+	for d in ['input', 'input/phanotate', 'input/coding-seqs']:
 		try:
 			os.mkdir(work_dir + d)
 		except FileExistsError:
@@ -222,3 +230,28 @@ def generate_msa(hhr_file, queryseq, hitslist, maxevalue=1e-3, ident_cut=0.5, qc
 			fasta[f]=fasta[f]+ "-" * (len(fasta[0])-len(fasta[f]))
 
 	return fasta, hit_order
+
+def process_phanotate_output(phanotate_filepath, work_dir):
+	"""Process raw output from Phanotate into compressed AA fasta file that is used further in pipeline."""
+
+	# copy file into input dir
+	phanotate_filepath_work_dir = work_dir + 'input/phanotate/cds-nt.fa'
+	cds_aa_filepath             = work_dir + 'input/coding-seqs/cds-aa.fa'
+	copyfile(phanotate_filepath, phanotate_filepath_work_dir)
+
+	# translate
+	fasta_nt = SeqIO.parse(phanotate_filepath_work_dir, "fasta")
+	fasta_aa = []
+
+	# iterate sequences and translate each
+	for record in fasta_nt:
+		record.seq         = record.seq.translate()[:-1] # remove stop codon asterix
+		record.name        = '' # clean header from Phanotate data
+		record.description = '' # clean header from Phanotate data
+		fasta_aa.append(record)
+	SeqIO.write(fasta_aa, cds_aa_filepath, "fasta")
+
+	# compress
+	call('bgzip {}'.format(cds_aa_filepath), shell=True)
+
+	print('All fasta translated. File compressed.')

@@ -26,6 +26,10 @@ def cluster_proteins(input_fasta_filepath, output_dirpath,
     mmseqs_createtsv_cmd = 'mmseqs createtsv {0}/SEQDB {0}/SEQDB {0}/CLUDB {1}'.format(
                                     mmseqs_tempdir, clustering_filepath)
 
+    ### DEVEL
+    mmseqs_createfasta_cmd = 'mmseqs result2flat {0}/SEQDB {0}/SEQDB {0}/CLUDB {1}'.format(
+                                    mmseqs_tempdir, clustering_filepath.replace('.tsv', '.fasta'))
+
 
     # print(mmseqs_createdb_cmd)
     # print(mmseqs_cluster_cmd)
