@@ -23,7 +23,7 @@ def run_hhblits(work_dir, hhsuite_bins, hhsuite_scripts, cpu, uniref_db_path, n,
     # in general two options: run on queue or in background (no reason to keep notebook open)
     # write bash runfile
     bash_script_filepath   = work_dir + 'tmp/all-by-all/helper-build-profiles.sh'
-    output_hhblits_dirpath = work_dir + 'intermediate/prot-families/profiles'
+    output_hhblits_dirpath = work_dir + 'intermediate/prot-families/profiles/hhblits'
     ind_seqs_dirpath       = work_dir + 'tmp/all-by-all/individual-seqs'
     out_hhr                = output_hhblits_dirpath + '/${FILE}.hhr'
     out_a3m                = output_hhblits_dirpath + '/${FILE}.a3m'
@@ -44,10 +44,10 @@ def run_hhblits(work_dir, hhsuite_bins, hhsuite_scripts, cpu, uniref_db_path, n,
 
     # run script
     run_cmd = 'nohup find {} -name "reprseq*fa" | xargs -P {} -n 1 {} &'.format(ind_seqs_dirpath, cpu, bash_script_filepath)
-    # print('DEVEL: hhblits run step omitted for quick check. Uncomment to set on.')
-    call(run_cmd, shell=True)
+    print('DEVEL: hhblits run step omitted for quick check. Uncomment to set on.')
+    # call(run_cmd, shell=True)
 
-def build_hh_db(work_dir, hhsuite_bins, hhsuite_scripts, verbose=False):
+def build_hh_db(work_dir, hhsuite_bins, hhsuite_scripts, run_mode, verbose=False):
 
     """Build HH-suite database from profiles of representative sequences."""
 
@@ -73,8 +73,8 @@ def build_hh_db(work_dir, hhsuite_bins, hhsuite_scripts, verbose=False):
         flog.close()
         return True
 
-    ind_profile_dir = work_dir + 'intermediate/prot-families/profiles'
-    db_dirpath      = work_dir + 'intermediate/prot-families/db'
+    ind_profile_dir = work_dir + 'intermediate/prot-families/profiles/' + run_mode
+    db_dirpath      = work_dir + 'intermediate/prot-families/db/' + run_mode
 
     # if db exists: ask to overwrite
     db_status = len(glob.glob(db_dirpath + '/*'))
@@ -124,7 +124,7 @@ def build_hh_db(work_dir, hhsuite_bins, hhsuite_scripts, verbose=False):
         if validate_db_creation(work_dir, db_dirpath):
             print('DB successfuly created.')
 
-def run_all_vs_all(work_dir, hhsuite_bins, hhsuite_scripts, cpu, n, p, a3m_wildcard):
+def run_all_vs_all(work_dir, hhsuite_bins, hhsuite_scripts, cpu, n, p, a3m_wildcard, run_mode):
 
     """Run HMM comparison of all representative proteins agains each other."""
 
@@ -148,9 +148,9 @@ def run_all_vs_all(work_dir, hhsuite_bins, hhsuite_scripts, cpu, n, p, a3m_wildc
 
 
     bash_script_filepath = work_dir + 'tmp/all-by-all/helper-search-all.sh'
-    ind_profile_dir      = work_dir + 'intermediate/prot-families/profiles'
-    db_dirpath           = work_dir + 'intermediate/prot-families/db'
-    output_dir           = work_dir + 'intermediate/prot-families/all-by-all'
+    ind_profile_dir      = work_dir + 'intermediate/prot-families/profiles/' + run_mode
+    db_dirpath           = work_dir + 'intermediate/prot-families/db/' + run_mode
+    output_dir           = work_dir + 'intermediate/prot-families/all-by-all/' + run_mode
 
     out_hhr = output_dir + '/${FILE}.hhr'
     output  = output_dir + '/${FILE}.o'

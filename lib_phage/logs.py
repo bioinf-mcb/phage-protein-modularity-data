@@ -167,7 +167,7 @@ def validate_create_db(work_dir):
     else:
         return False
 
-def validate_search_all_vs_all(work_dir):
+def validate_search_all_vs_all(work_dir, run_mode):
 
     # check if hhblits step complete
     flog = open(work_dir + 'log/hhblits-all-vs-all.log', 'r')
@@ -176,8 +176,8 @@ def validate_search_all_vs_all(work_dir):
     flog.close()
     if status == 'RUNNING':
         # check number of .hhr files compared to input files
-        ind_profile_dir        = work_dir + 'intermediate/prot-families/profiles'
-        output_hhblits_dirpath = work_dir + 'intermediate/prot-families/all-by-all'
+        ind_profile_dir        = work_dir + 'intermediate/prot-families/profiles/' + run_mode
+        output_hhblits_dirpath = work_dir + 'intermediate/prot-families/all-by-all/' + run_mode
 
         input_prof_n = len(glob.glob(ind_profile_dir + '/*.a3m'))
         output_hhr_n = len(glob.glob(output_hhblits_dirpath + '/*.hhr'))

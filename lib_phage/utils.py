@@ -33,15 +33,17 @@ def setup_dir_tree(work_dir):
 
 	### outputs
 	for d in ['output', 'output/prot-families', 'output/prot-families/representative',
-			  'output/prot-families/all-by-all']:
+			  'output/prot-families/all-by-all/hhblits', 'output/prot-families/all-by-all/mmseqs']:
 		try:
 			os.mkdir(work_dir + d)
 		except FileExistsError:
 			print('/' + d + '/ directory already set up')
 
 	### intermediates
-	for d in ['intermediate', 'intermediate/prot-families', 'intermediate/prot-families/profiles',
-			  'intermediate/prot-families/all-by-all', 'intermediate/prot-families/db']:
+	for d in ['intermediate', 'intermediate/prot-families', 'intermediate/prot-families/profiles/hhblits',
+			  'intermediate/prot-families/profiles/mmseqs', 'intermediate/prot-families/all-by-all/hhblits',
+			  'intermediate/prot-families/all-by-all/mmseqs', 'intermediate/prot-families/db/hhblits',
+			  'intermediate/prot-families/db/mmseqs']:
 		try:
 			os.mkdir(work_dir + d)
 		except FileExistsError:
@@ -63,8 +65,8 @@ def fetch_and_rename_protein_ids(work_dir, clustering_filepath, cds_all_filepath
 	repr_prot_names = clustering_results[0].unique()
 
 	# !!! minimize number of proteins for quick code check
-	repr_prot_names = repr_prot_names[:16]
-	print('DEVEL: Restricting input to 16 proteins for fast calculation')
+	# repr_prot_names = repr_prot_names[:16]
+	# print('DEVEL: Restricting input to 16 proteins for fast calculation')
 
 	repr_prot_names_filepath = '{}/repr-names'.format(work_dir + 'tmp/repr-proteins')
 
@@ -115,17 +117,17 @@ def fetch_and_rename_protein_ids(work_dir, clustering_filepath, cds_all_filepath
 
 	return no_repr_prot, name_table_filepath
 
-def build_hhr_table(work_dir):
+def build_hhr_table(work_dir, run_mode):
 
 	"""Build a table of results from hhr files."""
 
-	output_hhblits_dirpath = work_dir + 'intermediate/prot-families/all-by-all'
+	output_hhblits_dirpath = work_dir + 'intermediate/prot-families/all-by-all/' + run_mode
 
 	name_table_filepath = '{}/name-table.txt'.format(work_dir + 'output/prot-families/representative')
 	name_table          = pd.read_csv(name_table_filepath)
 	prot_n              = len(name_table)
 
-	hhr_table_filpath   =  '{}/table-hhr.txt'.format(work_dir + 'output/prot-families/all-by-all')
+	hhr_table_filpath   =  '{}/table-hhr.txt'.format(work_dir + 'output/prot-families/all-by-all/' + run_mode)
 	ftable              = open(hhr_table_filpath, 'w')
 	ftable.write('qname,qstart,qend,qlength,sname,sstart,send,slength,pident,bitscore,eval,prob,pval\n') # write header
 
@@ -255,3 +257,67 @@ def process_phanotate_output(phanotate_filepath, work_dir):
 	call('bgzip {}'.format(cds_aa_filepath), shell=True)
 
 	print('All fasta translated. File compressed.')
+
+def create_reprseq_profile_from_clustering(clustering_filepath, clustering_msa_filepath,
+										   cds_all_filepath, profile_outdir):
+
+	# load clusters and check one by one if bigger than 1
+	# if yes: get msa for cluster and save it as a3m
+	# if no: get sequence for singleton cluster and save as a3m
+	# needs mapping of ncbi to reprseqs (how to handle clusteres?)
+
+	# open clustering file and read clusters
+	fclust = open(clustering_filepath, 'r')
+
+	clusters = {}
+	for record in fclust:
+		cluster = record.split('\t')[0]
+		node    = record.split('\t')[1].strip()
+		if cluster in clusters.keys():
+			clusters[cluster].append(node)
+		else:
+			clusters[cluster] = [node]
+
+	fclust.close()
+
+	# print(clustering_msa_filepath)
+
+	# clean MSA file (raw file has some extra white chars that interfere with Biopython)
+	clust_msa_clean = open(clustering_msa_filepath + '_clean', 'w')
+	clust_msa_raw = open(clustering_msa_filepath, 'r')
+	for line in clust_msa_raw:
+		if '>' in line:
+			clust_msa_clean.write('>' + line.split('>')[1])
+		else:
+			clust_msa_clean.write(line)
+	clust_msa_raw.close()
+	clust_msa_clean.close()
+
+	# parse MSA file
+	clust_msa_seqs = {}
+	clust_msa      = SeqIO.parse(clustering_msa_filepath + '_clean', "fasta")
+	for record in clust_msa:
+		clust_msa_seqs[record.id] = record.seq
+
+	# parse all seqs file
+	cds_all = {}
+	cds     = SeqIO.parse(cds_all_filepath, "fasta")
+	for record in cds:
+		cds_all[record.id] = record.seq
+
+	# save each MSA as an a3m profile
+	nb_clusters = len(clusters.items())
+	for repr, (cluster, nodes) in enumerate(clusters.items()):
+		reprid = 'reprseq{:0>{id_width}}'.format(repr+1, id_width=len(str(nb_clusters)))
+		with open(profile_outdir + '/' + reprid + '.a3m', 'w') as fprofile:
+			if len(nodes) > 1: # save MSA
+				# save first seq as reprseq (fasta id)
+				fprofile.write('>' + reprid + '\n')
+				fprofile.write(str(clust_msa_seqs[nodes[0]]) + '\n')
+				for node in nodes[1:]: # save all other seqs from cluster
+					fprofile.write('>' + node + '\n')
+					fprofile.write(str(clust_msa_seqs[node]) + '\n')
+			else:
+				# get singleton seq and save
+				fprofile.write('>' + reprid + '\n')
+				fprofile.write(str(cds_all[nodes[0]]) + '\n')
