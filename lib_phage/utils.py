@@ -43,9 +43,9 @@ def setup_dir_tree(work_dir):
 	### intermediates
 	for d in ['intermediate', 'intermediate/prot-families', 'intermediate/prot-families/profiles',
 			  'intermediate/prot-families/profiles/hhblits',
-			  'intermediate/prot-families/profiles/mmseqs', 'intermediate/prot-families/all-by-all'
+			  'intermediate/prot-families/profiles/mmseqs', 'intermediate/prot-families/all-by-all',
 			  'intermediate/prot-families/all-by-all/hhblits',
-			  'intermediate/prot-families/all-by-all/mmseqs', 'intermediate/prot-families/db', 
+			  'intermediate/prot-families/all-by-all/mmseqs', 'intermediate/prot-families/db',
 			  'intermediate/prot-families/db/hhblits',
 			  'intermediate/prot-families/db/mmseqs']:
 		try:
