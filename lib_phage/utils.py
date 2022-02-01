@@ -33,6 +33,7 @@ def setup_dir_tree(work_dir):
 
 	### outputs
 	for d in ['output', 'output/prot-families', 'output/prot-families/representative',
+			  'output/prot-families/all-by-all',
 			  'output/prot-families/all-by-all/hhblits', 'output/prot-families/all-by-all/mmseqs']:
 		try:
 			os.mkdir(work_dir + d)
@@ -40,9 +41,12 @@ def setup_dir_tree(work_dir):
 			print('/' + d + '/ directory already set up')
 
 	### intermediates
-	for d in ['intermediate', 'intermediate/prot-families', 'intermediate/prot-families/profiles/hhblits',
-			  'intermediate/prot-families/profiles/mmseqs', 'intermediate/prot-families/all-by-all/hhblits',
-			  'intermediate/prot-families/all-by-all/mmseqs', 'intermediate/prot-families/db/hhblits',
+	for d in ['intermediate', 'intermediate/prot-families', 'intermediate/prot-families/profiles',
+			  'intermediate/prot-families/profiles/hhblits',
+			  'intermediate/prot-families/profiles/mmseqs', 'intermediate/prot-families/all-by-all'
+			  'intermediate/prot-families/all-by-all/hhblits',
+			  'intermediate/prot-families/all-by-all/mmseqs', 'intermediate/prot-families/db', 
+			  'intermediate/prot-families/db/hhblits',
 			  'intermediate/prot-families/db/mmseqs']:
 		try:
 			os.mkdir(work_dir + d)

@@ -5,3 +5,4 @@ __pycache__
 pipeline/hhpredofas_test.ipynb
 pipeline/Phage-DB.ipynb
 pipeline/Workflow-run.ipynb
+pipeline/usr/*.*
