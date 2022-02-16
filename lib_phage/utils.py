@@ -33,7 +33,7 @@ def setup_dir_tree(work_dir):
 
 	### outputs
 	for d in ['output', 'output/prot-families', 'output/prot-families/representative',
-			  'output/prot-families/all-by-all',
+			  'output/prot-families/all-by-all', '/output/prot-families/annot',
 			  'output/prot-families/all-by-all/hhblits', 'output/prot-families/all-by-all/mmseqs']:
 		try:
 			os.mkdir(work_dir + d)
@@ -42,7 +42,7 @@ def setup_dir_tree(work_dir):
 
 	### intermediates
 	for d in ['intermediate', 'intermediate/prot-families', 'intermediate/prot-families/profiles',
-			  'intermediate/prot-families/profiles/hhblits',
+			  'intermediate/prot-families/profiles/hhblits', 'intermediate/prot-families/annot',
 			  'intermediate/prot-families/profiles/mmseqs', 'intermediate/prot-families/all-by-all',
 			  'intermediate/prot-families/all-by-all/hhblits',
 			  'intermediate/prot-families/all-by-all/mmseqs', 'intermediate/prot-families/db',
@@ -132,6 +132,28 @@ def build_hhr_table(work_dir, run_mode):
 	prot_n              = len(name_table)
 
 	hhr_table_filpath   =  '{}/table-hhr.txt'.format(work_dir + 'output/prot-families/all-by-all/' + run_mode)
+	ftable              = open(hhr_table_filpath, 'w')
+	ftable.write('qname,qstart,qend,qlength,sname,sstart,send,slength,pident,bitscore,eval,prob,pval\n') # write header
+
+	for fhhr in sorted(glob.glob(output_hhblits_dirpath + '/*.hhr')):
+		qname    = fhhr.split('/')[-1].split('.')[0]
+		parser   = HHOutputParser()
+		hit_list = parser.parse_file(fhhr)
+		for hit in hit_list:
+			record = ','.join([ str(i) for i in [qname, hit.qstart, hit.qend,
+							   hit.qlength, hit.id, hit.start, hit.end, hit.length,
+							   int(hit.identity), hit.score, hit.evalue, (hit.probability * 100),
+							   hit.pvalue]])
+			ftable.write(record + '\n')
+	ftable.close()
+
+def build_hhr_table_dbs(work_dir, run_mode, db_name):
+
+	"""Build a table of results from hhr files obtained from profiles vs external db"""
+
+	output_hhblits_dirpath = work_dir + '/intermediate/prot-families/annot/{}'.format(db_name)
+
+	hhr_table_filpath   =  '{}/table-hhr-{}.txt'.format(work_dir + 'output/prot-families/annot', db_name)
 	ftable              = open(hhr_table_filpath, 'w')
 	ftable.write('qname,qstart,qend,qlength,sname,sstart,send,slength,pident,bitscore,eval,prob,pval\n') # write header
 

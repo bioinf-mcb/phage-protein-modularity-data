@@ -47,6 +47,38 @@ def run_hhblits(work_dir, hhsuite_bins, hhsuite_scripts, cpu, uniref_db_path, n,
     print('DEVEL: hhblits run step omitted for quick check. Uncomment to set on.')
     # call(run_cmd, shell=True)
 
+def run_hhblits_dbs(work_dir, hhsuite_bins, hhsuite_scripts, cpu, db_path, db_name, run_mode, n, mact, p, qid, cov):
+
+    """Run hhblits in order to search databases with profiles constructed for reprseqs."""
+
+    # in general two options: run on queue or in background (no reason to keep notebook open)
+    # write bash runfile
+    bash_script_filepath   = work_dir + 'tmp/all-by-all/helper-search-{}.sh'.format(db_name)
+    output_hhblits_dirpath = work_dir + '/intermediate/prot-families/annot/{}'.format(db_name)
+    os.mkdir(output_hhblits_dirpath) # create db dir
+
+    ind_seqs_dirpath       = work_dir + 'intermediate/prot-families/profiles/{}'.format(run_mode)
+    out_hhr                = output_hhblits_dirpath + '/${FILE}.hhr'
+    out_a3m                = output_hhblits_dirpath + '/${FILE}.a3m'
+    output                 = output_hhblits_dirpath + '/${FILE}.o'
+
+    cmd0 = '#!/bin/bash\n\n'
+    cmd0 = cmd0 + 'export PATH="{}:{}:$PATH"\n\n'.format(hhsuite_bins, hhsuite_scripts)
+    cmd1 = 'FILE=$(basename "${1}")\nFILE=${FILE%.*}\n'
+    cmd2 = 'hhblits -cpu 1 -i $1 -d {} -o {} -oa3m {} -n {} -mact {} -p {} -z 0 -v 0 -b 0 -qid {} -cov {} &> {}\n'.format(
+           uniref_db_path, out_hhr, out_a3m, n, mact, p, qid, cov, output)
+    cmd3 = 'rm -rf {} {}'.format(out_hhr, out_a3m) # to activate add to list below
+    fb = open(bash_script_filepath, 'w')
+    for cmd in [cmd0, cmd1, cmd2]:
+        fb.write(cmd)
+    fb.close()
+    # set execute mode
+    call('chmod a+x ' + bash_script_filepath, shell=True)
+
+    # run script
+    run_cmd = 'nohup find {} -name "reprseq*fa" | xargs -P {} -n 1 {} &'.format(ind_seqs_dirpath, cpu, bash_script_filepath)
+    call(run_cmd, shell=True)
+
 def build_hh_db(work_dir, hhsuite_bins, hhsuite_scripts, run_mode, verbose=False):
 
     """Build HH-suite database from profiles of representative sequences."""
