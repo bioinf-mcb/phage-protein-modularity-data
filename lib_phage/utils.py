@@ -33,7 +33,8 @@ def setup_dir_tree(work_dir):
 
 	### outputs
 	for d in ['output', 'output/prot-families', 'output/prot-families/representative',
-			  'output/prot-families/all-by-all', '/output/prot-families/annot',
+			  'output/prot-families/all-by-all', '/output/prot-families/functional',
+			  '/output/prot-families/families',
 			  'output/prot-families/all-by-all/hhblits', 'output/prot-families/all-by-all/mmseqs']:
 		try:
 			os.mkdir(work_dir + d)
@@ -42,7 +43,8 @@ def setup_dir_tree(work_dir):
 
 	### intermediates
 	for d in ['intermediate', 'intermediate/prot-families', 'intermediate/prot-families/profiles',
-			  'intermediate/prot-families/profiles/hhblits', 'intermediate/prot-families/annot',
+			  'intermediate/prot-families/profiles/hhblits', 'intermediate/prot-families/functional',
+			  'intermediate/prot-families/functional/hhrs',
 			  'intermediate/prot-families/profiles/mmseqs', 'intermediate/prot-families/all-by-all',
 			  'intermediate/prot-families/all-by-all/hhblits',
 			  'intermediate/prot-families/all-by-all/mmseqs', 'intermediate/prot-families/db',
@@ -151,9 +153,9 @@ def build_hhr_table_dbs(work_dir, run_mode, db_name):
 
 	"""Build a table of results from hhr files obtained from profiles vs external db"""
 
-	output_hhblits_dirpath = work_dir + '/intermediate/prot-families/annot/{}'.format(db_name)
+	output_hhblits_dirpath = work_dir + '/intermediate/prot-families/functional/hhrs{}'.format(db_name)
 
-	hhr_table_filpath   =  '{}/table-hhr-{}.txt'.format(work_dir + 'output/prot-families/annot', db_name)
+	hhr_table_filpath   =  '{}/hhblits-{}.txt'.format(work_dir + 'intermediate/prot-families/functional', db_name)
 	ftable              = open(hhr_table_filpath, 'w')
 	ftable.write('qname,qstart,qend,qlength,sname,sstart,send,slength,pident,bitscore,eval,prob,pval,annot\n') # write header
 
