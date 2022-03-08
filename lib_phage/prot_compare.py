@@ -68,7 +68,7 @@ def run_hhblits_dbs(work_dir, hhsuite_bins, hhsuite_scripts, cpu, db_path, db_na
     cmd0 = '#!/bin/bash\n\n'
     cmd0 = cmd0 + 'export PATH="{}:{}:$PATH"\n\n'.format(hhsuite_bins, hhsuite_scripts)
     cmd1 = 'FILE=$(basename "${1}")\nFILE=${FILE%.*}\n'
-    cmd2 = 'hhblits -cpu 1 -i $1 -d {} -o {} -oa3m {} -n {} -mact {} -p {} -z 0 -v 0 -b 0 -qid {} -cov {} &> {}\n'.format(
+    cmd2 = 'hhblits -cpu 2 -i $1 -d {} -o {} -oa3m {} -n {} -mact {} -p {} -z 0 -v 0 -b 0 -qid {} -cov {} &> {}\n'.format(
            db_path, out_hhr, out_a3m, n, mact, p, qid, cov, output)
     cmd3 = 'rm -rf {} {}'.format(out_hhr, out_a3m) # to activate add to list below
     fb = open(bash_script_filepath, 'w')

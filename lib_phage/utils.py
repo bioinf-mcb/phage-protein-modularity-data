@@ -141,7 +141,7 @@ def build_hhr_table(work_dir, run_mode):
 		hit_list = parser.parse_file(fhhr)
 		for hit in hit_list:
 			record = ','.join([ str(i) for i in [qname, hit.qstart, hit.qend,
-							   hit.qlength, hit.id, hit.start, hit.end, hit.length,
+							   hit.qlength, hit.id, hit.start, hit.end, hit.slength,
 							   int(hit.identity), hit.score, hit.evalue, (hit.probability * 100),
 							   hit.pvalue]])
 			ftable.write(record + '\n')
@@ -155,18 +155,21 @@ def build_hhr_table_dbs(work_dir, run_mode, db_name):
 
 	hhr_table_filpath   =  '{}/table-hhr-{}.txt'.format(work_dir + 'output/prot-families/annot', db_name)
 	ftable              = open(hhr_table_filpath, 'w')
-	ftable.write('qname,qstart,qend,qlength,sname,sstart,send,slength,pident,bitscore,eval,prob,pval\n') # write header
+	ftable.write('qname,qstart,qend,qlength,sname,sstart,send,slength,pident,bitscore,eval,prob,pval,annot\n') # write header
 
 	for fhhr in sorted(glob.glob(output_hhblits_dirpath + '/*.hhr')):
 		qname    = fhhr.split('/')[-1].split('.')[0]
 		parser   = HHOutputParser()
-		hit_list = parser.parse_file(fhhr)
-		for hit in hit_list:
-			record = ','.join([ str(i) for i in [qname, hit.qstart, hit.qend,
-							   hit.qlength, hit.id, hit.start, hit.end, hit.length,
+		try:
+			hit_list = parser.parse_file(fhhr)
+			for hit in hit_list:
+				record = ','.join([ str(i) for i in [qname, hit.qstart, hit.qend,
+							   hit.qlength, hit.id, hit.start, hit.end, hit.slength,
 							   int(hit.identity), hit.score, hit.evalue, (hit.probability * 100),
-							   hit.pvalue]])
-			ftable.write(record + '\n')
+							   hit.pvalue, hit.name.replace(',', ' ')]])
+				ftable.write(record + '\n')
+		except:
+			print('Alignment error in', fhhr)
 	ftable.close()
 
 def setup_paths():
