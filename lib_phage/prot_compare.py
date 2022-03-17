@@ -82,7 +82,7 @@ def run_hhblits_dbs(work_dir, hhsuite_bins, hhsuite_scripts, cpu, db_path, db_na
     run_cmd = 'nohup find {} -name "reprseq*a3m" | xargs -P {} -n 1 {} &'.format(ind_seqs_dirpath, cpu, bash_script_filepath)
     call(run_cmd, shell=True)
 
-def build_hh_db(work_dir, hhsuite_bins, hhsuite_scripts, run_mode, verbose=False):
+def build_hh_db(work_dir, hhsuite_bins, hhsuite_scripts, run_mode, verbose=False, print_cmds_only=False):
 
     """Build HH-suite database from profiles of representative sequences."""
 
@@ -137,27 +137,34 @@ def build_hh_db(work_dir, hhsuite_bins, hhsuite_scripts, run_mode, verbose=False
         cmd_sort7         = 'mv {0}/all_proteins_a3m_ordered.ffdata {0}/all_proteins_a3m.ffdata'.format(db_dirpath)
         cmd_sort8         = 'rm {0}/sorting.dat'.format(db_dirpath)
 
-        if len(glob.glob(ind_profile_dir + '/*.hhr')) > 0:
-            call(cmd_clear_a3m_dir, shell=True)
+        if print_cmds_only:
+            for cmd in [cmd_clear_a3m_dir, cmd_make_a3m, cmd_make_hmm, cmd_make_cs,
+                        cmd_sort1, cmd_sort2, cmd_sort3, cmd_sort4, cmd_sort5,
+                        cmd_sort6, cmd_sort7, cmd_sort8]:
+                print(cmd)
+                print()
+        else:
+            if len(glob.glob(ind_profile_dir + '/*.hhr')) > 0:
+                call(cmd_clear_a3m_dir, shell=True)
+                if verbose:
+                    print('Cleared .hhr and .o files from profiles dir.')
+            call(cmd_make_a3m, shell=True)
             if verbose:
-                print('Cleared .hhr and .o files from profiles dir.')
-        call(cmd_make_a3m, shell=True)
-        if verbose:
-            print('Concatenated a3m alignments.')
-        call(cmd_make_hmm, shell=True)
-        if verbose:
-            print('Created HMM profiles.')
-        call(cmd_make_cs, shell=True)
-        if verbose:
-            print('Created column state (CS) sequence database.')
+                print('Concatenated a3m alignments.')
+            call(cmd_make_hmm, shell=True)
+            if verbose:
+                print('Created HMM profiles.')
+            call(cmd_make_cs, shell=True)
+            if verbose:
+                print('Created column state (CS) sequence database.')
 
-        for cmd in [cmd_sort1, cmd_sort2, cmd_sort3, cmd_sort4, cmd_sort5, cmd_sort6, cmd_sort7, cmd_sort8]:
-            call(cmd, shell=True)
-        if verbose:
-            print('DB sorted.')
+            for cmd in [cmd_sort1, cmd_sort2, cmd_sort3, cmd_sort4, cmd_sort5, cmd_sort6, cmd_sort7, cmd_sort8]:
+                call(cmd, shell=True)
+            if verbose:
+                print('DB sorted.')
 
-        if validate_db_creation(work_dir, db_dirpath):
-            print('DB successfuly created.')
+            if validate_db_creation(work_dir, db_dirpath):
+                print('DB successfuly created.')
 
 def run_all_vs_all(work_dir, hhsuite_bins, hhsuite_scripts, cpu, n, p, a3m_wildcard, run_mode):
 

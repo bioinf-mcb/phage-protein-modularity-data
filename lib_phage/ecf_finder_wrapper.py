@@ -6,7 +6,7 @@ import pickle
 def load_and_filter_data(work_dir, filters_used, filters_params):
 
     ### load data
-    output_dirpath   = work_dir + 'output/prot-families/all-by-all/'
+    output_dirpath   = work_dir + 'output/prot-families/all-by-all/hhblits/'
     hhr_table        = pd.read_csv(output_dirpath + 'table-hhr.txt', sep=',')
     annotation_table = pd.read_csv(output_dirpath + 'repr-annot.txt', sep=',')
 

@@ -206,7 +206,7 @@ def validate_input_ECF(work_dir):
     """
 
     # check if hhr table and annotation table files exist & are not empty
-    output_dirpath  = work_dir + 'output/prot-families/all-by-all'
+    output_dirpath  = work_dir + 'output/prot-families/all-by-all/hhblits'
     ecf_out_dirpath = work_dir + 'output/ecf-search/'
 
     for f in ['/table-hhr.txt', '/repr-annot.txt']:
