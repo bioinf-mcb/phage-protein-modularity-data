@@ -126,7 +126,7 @@ def save_params_hhblits(work_dir, n, mact, p, qid, cov):
 
     print('Parameters saved, log file stored.')
 
-def validate_output_hhblits(work_dir):
+def validate_output_hhblits(work_dir, run_mode):
 
     # check if hhblits step complete
     flog = open(work_dir + 'log/hhblits.log', 'r')
@@ -136,7 +136,7 @@ def validate_output_hhblits(work_dir):
     if status == 'RUNNING':
         # check number of .hhr files compared to input files
         ind_seqs_dirpath       = work_dir + 'tmp/all-by-all/individual-seqs'
-        output_hhblits_dirpath = work_dir + 'intermediate/prot-families/profiles'
+        output_hhblits_dirpath = work_dir + 'intermediate/prot-families/profiles/{}'.format(run_mode)
 
         input_seqs_n = len(glob.glob(ind_seqs_dirpath + '/*.fa'))
         output_a3m_n = len(glob.glob(output_hhblits_dirpath + '/*.a3m'))

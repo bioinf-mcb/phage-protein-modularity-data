@@ -44,8 +44,8 @@ def run_hhblits(work_dir, hhsuite_bins, hhsuite_scripts, cpu, uniref_db_path, n,
 
     # run script
     run_cmd = 'nohup find {} -name "reprseq*fa" | xargs -P {} -n 1 {} &'.format(ind_seqs_dirpath, cpu, bash_script_filepath)
-    print('DEVEL: hhblits run step omitted for quick check. Uncomment to set on.')
-    # call(run_cmd, shell=True)
+    # print('DEVEL: hhblits run step omitted for quick check. Uncomment to set on.')
+    call(run_cmd, shell=True)
 
 def run_hhblits_dbs(work_dir, hhsuite_bins, hhsuite_scripts, cpu, db_path, db_name, run_mode, n, mact, p, qid, cov):
 
