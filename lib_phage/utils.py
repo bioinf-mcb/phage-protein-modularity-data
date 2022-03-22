@@ -140,13 +140,16 @@ def build_hhr_table(work_dir, run_mode):
 	for fhhr in sorted(glob.glob(output_hhblits_dirpath + '/*.hhr')):
 		qname    = fhhr.split('/')[-1].split('.')[0]
 		parser   = HHOutputParser()
-		hit_list = parser.parse_file(fhhr)
-		for hit in hit_list:
-			record = ','.join([ str(i) for i in [qname, hit.qstart, hit.qend,
-							   hit.qlength, hit.id, hit.start, hit.end, hit.slength,
-							   int(hit.identity), hit.score, hit.evalue, (hit.probability * 100),
-							   hit.pvalue]])
-			ftable.write(record + '\n')
+		try:
+			hit_list = parser.parse_file(fhhr)
+			for hit in hit_list:
+				record = ','.join([ str(i) for i in [qname, hit.qstart, hit.qend,
+								   hit.qlength, hit.id, hit.start, hit.end, hit.slength,
+								   int(hit.identity), hit.score, hit.evalue, (hit.probability * 100),
+								   hit.pvalue]])
+				ftable.write(record + '\n')
+		except:
+			print('Alignment error in', fhhr)
 	ftable.close()
 
 def build_hhr_table_dbs(work_dir, run_mode, db_name):
