@@ -54,7 +54,7 @@ def run_hhblits_dbs(work_dir, hhsuite_bins, hhsuite_scripts, cpu, db_path, db_na
     # in general two options: run on queue or in background (no reason to keep notebook open)
     # write bash runfile
     bash_script_filepath   = work_dir + 'tmp/all-by-all/helper-search-{}.sh'.format(db_name)
-    output_hhblits_dirpath = work_dir + 'intermediate/prot-families/annot/{}'.format(db_name)
+    output_hhblits_dirpath = work_dir + '/intermediate/prot-families/functional/hhrs/{}'.format(db_name)
     try:
         os.mkdir(output_hhblits_dirpath) # create db dir
     except FileExistsError:

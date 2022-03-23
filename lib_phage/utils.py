@@ -156,7 +156,7 @@ def build_hhr_table_dbs(work_dir, run_mode, db_name):
 
 	"""Build a table of results from hhr files obtained from profiles vs external db"""
 
-	output_hhblits_dirpath = work_dir + '/intermediate/prot-families/functional/hhrs{}'.format(db_name)
+	output_hhblits_dirpath = work_dir + '/intermediate/prot-families/functional/hhrs/{}'.format(db_name)
 
 	hhr_table_filpath   =  '{}/hhblits-{}.txt'.format(work_dir + 'intermediate/prot-families/functional', db_name)
 	ftable              = open(hhr_table_filpath, 'w')
