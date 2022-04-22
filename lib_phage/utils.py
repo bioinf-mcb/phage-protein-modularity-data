@@ -18,7 +18,7 @@ def setup_dir_tree(work_dir):
 
 	### tmp dirs
 	for d in ['tmp', 'tmp/repr-proteins', 'tmp/mmseqs', 'tmp/all-by-all',
-			  'tmp/all-by-all/individual-seqs']:
+			  'tmp/all-by-all/individual-seqs', 'tmp/parse']:
 		try:
 			os.mkdir(work_dir + d)
 		except FileExistsError:
@@ -158,7 +158,7 @@ def build_hhr_table_dbs(work_dir, run_mode, db_name):
 
 	output_hhblits_dirpath = work_dir + '/intermediate/prot-families/functional/hhrs/{}'.format(db_name)
 
-	hhr_table_filpath   =  '{}/hhblits-{}.txt'.format(work_dir + 'intermediate/prot-families/functional', db_name)
+	hhr_table_filpath   = '{}/hhblits-{}.txt'.format(work_dir + 'intermediate/prot-families/functional', db_name)
 	ftable              = open(hhr_table_filpath, 'w')
 	ftable.write('qname,qstart,qend,qlength,sname,sstart,send,slength,pident,bitscore,eval,prob,pval,annot\n') # write header
 
@@ -176,6 +176,190 @@ def build_hhr_table_dbs(work_dir, run_mode, db_name):
 		except:
 			print('Alignment error in', fhhr)
 	ftable.close()
+
+def parse_hhr_single_file(protein_hhr_path):
+	"""Parse results from single hhblits file and store it in dataframe.
+
+	Parameters:
+	-----------
+	protein_hhr_path : string
+		Path to the hhblits results file (.hhr).
+
+	Returns:
+	--------
+	pd.DataFrame
+		Dataframe with parsed results from one file.
+	"""
+	parser    = HHOutputParser()
+	qname     = protein_hhr_path.split('/')[-1].split('.')[0]
+	hits_data = {}
+
+	try:
+		hits = parser.parse_file(protein_hhr_path)
+		for n, hit in enumerate(hits):
+			record = [ str(i) for i in [qname, hit.qstart, hit.qend,
+					   hit.qlength, hit.id, hit.start, hit.end, hit.slength,
+					   int(hit.identity), hit.score, hit.evalue,
+					   (hit.probability * 100),
+					   hit.pvalue, hit.name.replace(',', ' ')] ]
+			hits_data[n] = record
+	except:
+		print('Alignment error in', protein_hhr_path)
+
+	protein_hhr_parsed = pd.DataFrame.from_dict(hits_data, orient='index',
+									  columns=['qname', 'qstart', 'qend',
+									  'qlength', 'sname', 'sstart', 'send',
+									  'slength', 'pident', 'bitscore', 'eval',
+									  'prob', 'pval', 'annot'])
+
+	return protein_hhr_parsed
+
+def create_bash_script_to_parse_hhr_results(work_dir, pipeline_env_path,
+											lib_pp_path):
+	"""Create bash script to run hhr results parser in a parallel manner.
+
+	Parameters:
+	-----------
+	work_dir : string
+		Path to the working directory.
+	pipeline_env_path : string
+		Path to virtualenv where phage pipeline code is stored. It needs to be
+		communicated to the script to activate virtualenv in bash script.
+	lib_pp_path : string
+		Path to pipeline code. It needs to be communicated to the Python
+		script so the parsing functions will be loaded.
+
+	Returns:
+	--------
+	string
+		Absolute path to the created bash script.
+	"""
+	script_filepath =  work_dir + 'tmp/parse/helper-parse-db.sh'
+
+	cmd = '#!/bin/bash\n\n'
+	cmd += 'FILE=$(basename "${1}")\nFILE=${FILE%.*}\n'
+	cmd += 'source ' + pipeline_env_path + '/bin/activate\n'
+	cmd += 'python3 ' + pipeline_env_path \
+	+ '/phage-pipeline/lib_phage/run_parsing_db_single_protein.py ${1} ' \
+	+ lib_pp_path + '\n'
+
+	with open(script_filepath, 'w') as file_sh:
+		file_sh.write(cmd)
+
+	return script_filepath
+
+def run_parsing_with_bash(work_dir, n_cores, db_name):
+	"""Run previously prepared bash script that will run parsing on all
+	protein db scan results in dataset in a parallel manner. Before run clean
+	directory from results of previous parsing attempts if any.
+
+	Parameters:
+	-----------
+	work_dir : string
+		Path to the working directory.
+	n_cores : int
+		Maximum number of cores to be used in parallel run.
+	db_name : string
+		Name of the database results to parse.
+
+	Returns:
+	--------
+	"""
+	script_filepath = work_dir + 'tmp/parse/helper-parse-db.sh'
+	results_dirpath = work_dir \
+	+ '/intermediate/prot-families/functional/hhrs/{}'.format(db_name)
+
+	# clean previous parsing partial results
+	if len(glob.glob(results_dirpath + '*.txt')) > 0:
+		print('Clearing previous parsing partial files...')
+		call('rm  ' + results_dirpath + '*.txt', shell=True)
+		print('Cleared.')
+
+	# set execute mode
+	call('chmod a+x ' + script_filepath, shell=True)
+
+	# run script
+	run_cmd = 'nohup find {} -name "reprseq*.hhr" | xargs -P {} -n 1 {} \
+	&'.format(results_dirpath, n_cores, script_filepath)
+	call(run_cmd, shell=True)
+
+def concatenate_parsing_results(work_dir, db_name):
+	"""Check if all results were processed with parser and if yes then
+	colect all the resulting dataframes into summary files. If not all expected
+	output files are present function quits.
+
+	Parameters:
+	-----------
+	work_dir : string
+		Path to the working directory.
+	db_name : string
+		Name of the database results to parse.
+
+	Returns:
+	--------
+	bool
+		Status of the execution. Returns False if still waiting for processing
+		to complete. Returns True if process complete and files were successfuly
+		concatenated.
+	"""
+	# check if all expected output files are present
+	results_dirpath = work_dir \
+	+ '/intermediate/prot-families/functional/hhrs/{}'.format(db_name)
+	nb_expected_files  = len(glob.glob(results_dirpath + '/*.hhr'))
+	nb_complete_files  = len(glob.glob(results_dirpath + '/*.txt'))
+	hhr_table_filpath  = '{}/hhblits-{}.txt'.format(work_dir
+	+ 'intermediate/prot-families/functional', db_name)
+
+	if nb_expected_files == nb_complete_files:
+		print('All files processed. Concatenating...')
+		results_all_part = []
+		for prot_result in glob.glob(results_dirpath + '/*.txt'):
+			results_all_part.append(pd.read_csv(prot_result))
+		results_all = pd.concat(results_all_part)
+		results_all.to_csv(hhr_table_filpath, index=False)
+		print('Done.')
+		return True
+	else:
+		print('Not all files processed. Check again later.')
+		return False
+
+def clean_clustering_partial_data(work_dir, db_name):
+	"""Clean directory with single protein dataframes. Saves space.
+
+	Parameters:
+	-----------
+	work_dir : string
+		Path to the working directory.
+
+	Returns:
+	--------
+	"""
+	results_dirpath = work_dir \
+	+ '/intermediate/prot-families/functional/hhrs/{}'.format(db_name)
+
+	if len(glob.glob(results_dirpath + '/*.txt')) > 0:
+		print('Clearing parsing partial files...')
+		call('rm  ' + results_dirpath + '/*.txt', shell=True)
+		print('Cleared.')
+
+def parse_hhr_files(work_dir, run_mode):
+
+	# dataset already split into single proteins
+	# create bash script that runs parser script* (loading libs)
+	create_bash_script_to_run_clustering(workdir_path, ecf_env_path, lib_ecf_path, dbscan_params)
+	# run bash script with xargs (n-cores)
+	n_cores = 4
+	run_clustering_with_bash(workdir_path, n_cores) # plus clear previous files if any - including parse dir
+
+
+	# check if done and if so: concat all dfs into one
+
+	# *create parser script (input: hhr-path, output: csv file drop of pandas df)
+	# if alignment error: drop empty df
+	if concatenate_clustering_results(workdir_path):
+		clean_clustering_partial_data(workdir_path)
+
+	return 0
 
 def setup_paths():
 	'''load existing configuration from file or create new if no file'''

@@ -200,7 +200,7 @@ def run_all_vs_all(work_dir, hhsuite_bins, hhsuite_scripts, cpu, n, p, a3m_wildc
     cmd0 = '#!/bin/bash\n\n'
     cmd0 = cmd0 + 'export PATH="{}:{}:$PATH"\n\n'.format(hhsuite_bins, hhsuite_scripts)
     cmd1 = 'FILE=$(basename "${1}")\nFILE=${FILE%.*}\n'
-    cmd2 = '{}/hhblits -cpu 1 -i $1 -d {}/all_proteins -o {} -n {} -p {} -z 0 -Z 32000 -v 0 -b 0 -B 32000 &> {}'.format(
+    cmd2 = '{}/hhblits -cpu 2 -i $1 -d {}/all_proteins -o {} -n {} -p {} -z 0 -Z 32000 -v 0 -b 0 -B 32000 &> {}'.format(
     hhsuite_bins, db_dirpath, out_hhr, n, p, output)
 
     fb = open(bash_script_filepath, 'w')
