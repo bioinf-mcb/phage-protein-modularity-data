@@ -18,7 +18,8 @@ def setup_dir_tree(work_dir):
 
 	### tmp dirs
 	for d in ['tmp', 'tmp/repr-proteins', 'tmp/mmseqs', 'tmp/all-by-all',
-			  'tmp/all-by-all/individual-seqs', 'tmp/parse']:
+			  'tmp/all-by-all/individual-seqs', 'tmp/parse', 'tmp/prot-families',
+			  'tmp/prot-families/pair_table_chunks']:
 		try:
 			os.mkdir(work_dir + d)
 		except FileExistsError:
@@ -341,25 +342,6 @@ def clean_clustering_partial_data(work_dir, db_name):
 		print('Clearing parsing partial files...')
 		call('rm  ' + results_dirpath + '/*.txt', shell=True)
 		print('Cleared.')
-
-def parse_hhr_files(work_dir, run_mode):
-
-	# dataset already split into single proteins
-	# create bash script that runs parser script* (loading libs)
-	create_bash_script_to_run_clustering(workdir_path, ecf_env_path, lib_ecf_path, dbscan_params)
-	# run bash script with xargs (n-cores)
-	n_cores = 4
-	run_clustering_with_bash(workdir_path, n_cores) # plus clear previous files if any - including parse dir
-
-
-	# check if done and if so: concat all dfs into one
-
-	# *create parser script (input: hhr-path, output: csv file drop of pandas df)
-	# if alignment error: drop empty df
-	if concatenate_clustering_results(workdir_path):
-		clean_clustering_partial_data(workdir_path)
-
-	return 0
 
 def setup_paths():
 	'''load existing configuration from file or create new if no file'''
