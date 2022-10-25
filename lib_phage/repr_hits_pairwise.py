@@ -5,13 +5,15 @@ def get_prob_cov(pair_hits, prob_threshold = 50):
 
     no_hits = len(pair_hits)
     out = []
-    if no_hits > 0:
+    if no_hits == 0:
+        out = [float("nan"), float("nan"), float("nan"), float("nan"), no_hits]
+    elif no_hits > 0:
         subject_len = pair_hits['slength'].iloc[0]
         query_len = pair_hits['qlength'].iloc[0]
         if no_hits == 1:
             hit_prob = pair_hits['prob'].iloc[0] / 100
             hit_scov = abs(pair_hits['send'] - pair_hits['sstart'] + 1) / subject_len
-            hit_qcov = abs(pair_hits['send'] - pair_hits['sstart'] + 1) / query_len
+            hit_qcov = abs(pair_hits['qend'] - pair_hits['qstart'] + 1) / query_len
             hit_scov = hit_scov.iloc[0]
             hit_qcov = hit_qcov.iloc[0]
             hit_pident = pair_hits['pident'].iloc[0] / 100
@@ -30,7 +32,7 @@ def get_prob_cov(pair_hits, prob_threshold = 50):
 
             prob_per_pos['max'] = prob_per_pos.max(axis=1)
             pident_per_pos['max'] = pident_per_pos.max(axis=1)
-            pos_pass = (prob_per_pos['max'] > prob_threshold)
+            pos_pass = (prob_per_pos['max'] >= prob_threshold)
 
             hit_scov = sum(pos_pass) / len(prob_per_pos)
             hit_sprob = np.mean(prob_per_pos['max'][pos_pass]) / 100
@@ -50,7 +52,7 @@ def get_prob_cov(pair_hits, prob_threshold = 50):
 
             prob_per_pos['max'] = prob_per_pos.max(axis=1)
             pident_per_pos['max'] = pident_per_pos.max(axis=1)
-            pos_pass = (prob_per_pos['max'] > prob_threshold)
+            pos_pass = (prob_per_pos['max'] >= prob_threshold)
 
             hit_qcov = sum(pos_pass) / len(prob_per_pos)
             hit_qprob = np.mean(prob_per_pos['max'][pos_pass]) / 100
@@ -59,6 +61,6 @@ def get_prob_cov(pair_hits, prob_threshold = 50):
             hit_prob = min(hit_sprob, hit_qprob)
             hit_pident = min(hit_spident, hit_qpident)
 
-        out = [hit_prob, hit_scov, hit_qcov, hit_pident]
+        out = [hit_prob, hit_scov, hit_qcov, hit_pident, no_hits]
 
     return out

@@ -31,53 +31,35 @@ if __name__ == '__main__':
             this_pair_qname = pair['qname']
             this_pair_sname = pair['sname']
 
-            prob_ab=0
-            prob_ba=0
-            scov_ab=0
-            scov_ba=0
-            qcov_ab=0
-            qcov_ba=0
-            pident_ab=0
-            pident_ba=0
-
             this_pair_hits_ab = table_hhr[(table_hhr['qname'] == this_pair_qname) & (table_hhr['sname'] == this_pair_sname)]
-
             this_pair_prob_cov_ab = get_prob_cov(this_pair_hits_ab, prob_threshold = prob_threshold)
-            if this_pair_prob_cov_ab:
-                prob_ab = this_pair_prob_cov_ab[0]
-                scov_ab = this_pair_prob_cov_ab[1]
-                qcov_ab = this_pair_prob_cov_ab[2]
-                pident_ab = this_pair_prob_cov_ab[3]
-
+            prob_ab = this_pair_prob_cov_ab[0]
+            scov_ab = this_pair_prob_cov_ab[1]
+            qcov_ab = this_pair_prob_cov_ab[2]
+            pident_ab = this_pair_prob_cov_ab[3]
+            no_hits_ab = this_pair_prob_cov_ab[4]
 
             this_pair_hits_ba = table_hhr[(table_hhr['sname'] == this_pair_qname) & (table_hhr['qname'] == this_pair_sname)]
-
             this_pair_prob_cov_ba = get_prob_cov(this_pair_hits_ba, prob_threshold = prob_threshold)
-            if this_pair_prob_cov_ba:
-                prob_ba = this_pair_prob_cov_ba[0]
-                scov_ba = this_pair_prob_cov_ba[1]
-                qcov_ba = this_pair_prob_cov_ba[2]
-                pident_ba = this_pair_prob_cov_ba[3]
+            prob_ba = this_pair_prob_cov_ba[0]
+            scov_ba = this_pair_prob_cov_ba[2]
+            qcov_ba = this_pair_prob_cov_ba[1]
+            pident_ba = this_pair_prob_cov_ba[3]
+            no_hits_ba = this_pair_prob_cov_ba[4]
 
-
-            min_prob = 0
-            if (prob_ab and prob_ba):
-                min_prob = min(prob_ab, prob_ba)
-            this_pair_prob = min_prob
-            this_pair_scov = min(scov_ab, scov_ba)
-            this_pair_qcov = min(qcov_ab, qcov_ba)
-            min_pident = 0
-            if (pident_ab and pident_ba):
-                min_pident = min(pident_ab, pident_ba)
-            this_pair_pident = min_pident
+            this_pair_prob = np.nanmin([prob_ab, prob_ba])
+            this_pair_scov = np.nanmin([scov_ab, scov_ba])
+            this_pair_qcov = np.nanmin([qcov_ab, qcov_ba])
+            this_pair_pident = np.nanmin([pident_ab, pident_ba])
 
             pair_results[i] = [this_pair_qname, this_pair_sname, this_pair_qcov,
-                               this_pair_scov, this_pair_prob, this_pair_pident]
+                               this_pair_scov, this_pair_prob, this_pair_pident,
+                               no_hits_ab, no_hits_ba]
 
         ### now to dataframe and drop to file
         output_filename = 'repr-hits-pairwise-prob' + str(prob_threshold) + '-' + str(pair_table_id) + '-' + str(j) + '.txt'
         pair_results_df = pd.DataFrame.from_dict(pair_results, orient='index',
-                                                 columns=['qname', 'sname', 'qcov', 'scov', 'prob', 'pident'])
+                                                 columns=['qname', 'sname', 'qcov', 'scov', 'prob', 'pident', 'no_hits_ab', 'no_hits_ba'])
         pair_results_df.to_csv(families_output_dir + output_filename, index=False, header=False, float_format="%.4f")
 
 """ initial version to be reinstated for full-scale calculation to continue
