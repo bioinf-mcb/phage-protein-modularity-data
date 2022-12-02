@@ -50,7 +50,8 @@ def setup_dir_tree(work_dir):
 			  'intermediate/prot-families/all-by-all/hhblits',
 			  'intermediate/prot-families/all-by-all/mmseqs', 'intermediate/prot-families/db',
 			  'intermediate/prot-families/db/hhblits',
-			  'intermediate/prot-families/db/mmseqs']:
+			  'intermediate/prot-families/db/mmseqs',
+			  'intermediate/prot-families/families']:
 		try:
 			os.mkdir(work_dir + d)
 		except FileExistsError:

@@ -16,7 +16,7 @@ if __name__ == '__main__':
     output_dir = work_dir + 'output/'
     inter_dir = work_dir + 'intermediate/'
     all_by_all_output_dir = output_dir + 'prot-families/all-by-all/' + run_mode + '/'
-    families_output_dir = output_dir + 'prot-families/families/'
+    families_output_dir = inter_dir + 'prot-families/families/'
     parts_dir = work_dir + 'tmp/prot-families/pair_table_chunks/'
 
     for j in range(n_subsets):
