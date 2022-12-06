@@ -179,13 +179,16 @@ def build_hhr_table_dbs(work_dir, run_mode, db_name):
 			print('Alignment error in', fhhr)
 	ftable.close()
 
-def parse_hhr_single_file(protein_hhr_path):
+def parse_hhr_single_file(protein_hhr_path, ecf=False):
 	"""Parse results from single hhblits file and store it in dataframe.
 
 	Parameters:
 	-----------
 	protein_hhr_path : string
 		Path to the hhblits results file (.hhr).
+	ecf : bool
+		Switch for parsing ECFs and other files. If on, it will add 'ecf_'
+		identifier to the hit id.
 
 	Returns:
 	--------
@@ -199,8 +202,12 @@ def parse_hhr_single_file(protein_hhr_path):
 	try:
 		hits = parser.parse_file(protein_hhr_path)
 		for n, hit in enumerate(hits):
+			if ecf:
+				hit_id = 'ecf_' + hit.id
+			else:
+				hit_id = hit.id
 			record = [ str(i) for i in [qname, hit.qstart, hit.qend,
-					   hit.qlength, hit.id, hit.start, hit.end, hit.slength,
+					   hit.qlength, hit_id, hit.start, hit.end, hit.slength,
 					   int(hit.identity), hit.score, hit.evalue,
 					   (hit.probability * 100),
 					   hit.pvalue, hit.name.replace(',', ' ')] ]
@@ -217,7 +224,7 @@ def parse_hhr_single_file(protein_hhr_path):
 	return protein_hhr_parsed
 
 def create_bash_script_to_parse_hhr_results(work_dir, pipeline_env_path,
-											lib_pp_path):
+											lib_pp_path, ecf=False):
 	"""Create bash script to run hhr results parser in a parallel manner.
 
 	Parameters:
@@ -230,6 +237,9 @@ def create_bash_script_to_parse_hhr_results(work_dir, pipeline_env_path,
 	lib_pp_path : string
 		Path to pipeline code. It needs to be communicated to the Python
 		script so the parsing functions will be loaded.
+	ecf : bool
+		Switch for parsing ECFs and other files. If on, it will add 'ecf_'
+		identifier to the hit id.
 
 	Returns:
 	--------
@@ -243,14 +253,15 @@ def create_bash_script_to_parse_hhr_results(work_dir, pipeline_env_path,
 	cmd += 'source ' + pipeline_env_path + '/bin/activate\n'
 	cmd += 'python3 ' + pipeline_env_path \
 	+ '/phage-pipeline/lib_phage/run_parsing_db_single_protein.py ${1} ' \
-	+ lib_pp_path + '\n'
+	+ ecf + ' ' + lib_pp_path + '\n'
 
 	with open(script_filepath, 'w') as file_sh:
 		file_sh.write(cmd)
 
 	return script_filepath
 
-def run_parsing_with_bash(work_dir, n_cores, db_name):
+def run_parsing_with_bash(work_dir, n_cores, db_name, run_mode=None,
+						  wildcard='reprseq*.hhr'):
 	"""Run previously prepared bash script that will run parsing on all
 	protein db scan results in dataset in a parallel manner. Before run clean
 	directory from results of previous parsing attempts if any.
@@ -262,14 +273,24 @@ def run_parsing_with_bash(work_dir, n_cores, db_name):
 	n_cores : int
 		Maximum number of cores to be used in parallel run.
 	db_name : string
-		Name of the database results to parse.
+		Name of the database results to parse. If None then assume it is
+		all-vs-all run and parse files from all-vs-all results dir.
+	run_mode : string
+		Mode of run [hhblits/mmseqs]. Needed to set correct input path. Only
+		used when parsing results of all-vs-all.
+	wildcard : string
+		Wildcard that will be used by script to find all hhr files to parse.
 
 	Returns:
 	--------
 	"""
 	script_filepath = work_dir + 'tmp/parse/helper-parse-db.sh'
-	results_dirpath = work_dir \
-	+ '/intermediate/prot-families/functional/hhrs/{}'.format(db_name)
+	if db_name:
+		results_dirpath = work_dir \
+		+ '/intermediate/prot-families/functional/hhrs/{}'.format(db_name)
+	else:
+		results_dirpath = work_dir \
+		+ '/intermediate/prot-families/all-by-all/{}'.format(run_mode)
 
 	# clean previous parsing partial results
 	if len(glob.glob(results_dirpath + '*.txt')) > 0:
@@ -281,8 +302,8 @@ def run_parsing_with_bash(work_dir, n_cores, db_name):
 	call('chmod a+x ' + script_filepath, shell=True)
 
 	# run script
-	run_cmd = 'nohup find {} -name "reprseq*.hhr" | xargs -P {} -n 1 {} \
-	&'.format(results_dirpath, n_cores, script_filepath)
+	run_cmd = 'nohup find {} -name "{}" | xargs -P {} -n 1 {} \
+	&'.format(results_dirpath, wildcard, n_cores, script_filepath)
 	call(run_cmd, shell=True)
 
 def concatenate_parsing_results(work_dir, db_name):
