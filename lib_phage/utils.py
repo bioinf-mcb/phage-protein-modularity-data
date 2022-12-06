@@ -306,7 +306,8 @@ def run_parsing_with_bash(work_dir, n_cores, db_name, run_mode=None,
 	&'.format(results_dirpath, wildcard, n_cores, script_filepath)
 	call(run_cmd, shell=True)
 
-def concatenate_parsing_results(work_dir, db_name):
+def concatenate_parsing_results(work_dir, db_name, run_mode=None,
+								results_filename=None):
 	"""Check if all results were processed with parser and if yes then
 	colect all the resulting dataframes into summary files. If not all expected
 	output files are present function quits.
@@ -316,7 +317,14 @@ def concatenate_parsing_results(work_dir, db_name):
 	work_dir : string
 		Path to the working directory.
 	db_name : string
-		Name of the database results to parse.
+		Name of the database results to parse. If None then assume it is
+		all-vs-all run and parse files from all-vs-all results dir.
+	run_mode : string
+		Mode of run [hhblits/mmseqs]. Needed to set correct input path. Only
+		used when parsing results of all-vs-all.
+	results_filename : string
+		Name of the output file aggregating the results. Used only when db_name
+		is set to None.
 
 	Returns:
 	--------
@@ -326,12 +334,18 @@ def concatenate_parsing_results(work_dir, db_name):
 		concatenated.
 	"""
 	# check if all expected output files are present
-	results_dirpath = work_dir \
-	+ '/intermediate/prot-families/functional/hhrs/{}'.format(db_name)
+	if db_name:
+		results_dirpath = work_dir \
+		+ '/intermediate/prot-families/functional/hhrs/{}'.format(db_name)
+		hhr_table_filpath  = '{}/hhblits-{}.txt'.format(work_dir
+		+ 'intermediate/prot-families/functional', db_name)
+	else:
+		results_dirpath = work_dir \
+		+ '/intermediate/prot-families/all-by-all/{}'.format(run_mode)
+		hhr_table_filpath  = '{}/{}.txt'.format(work_dir
+		+ '/output/prot-families/all-by-all/' + db_name, results_filename)
 	nb_expected_files  = len(glob.glob(results_dirpath + '/*.hhr'))
 	nb_complete_files  = len(glob.glob(results_dirpath + '/*.txt'))
-	hhr_table_filpath  = '{}/hhblits-{}.txt'.format(work_dir
-	+ 'intermediate/prot-families/functional', db_name)
 
 	if nb_expected_files == nb_complete_files:
 		print('All files processed. Concatenating...')
@@ -346,19 +360,29 @@ def concatenate_parsing_results(work_dir, db_name):
 		print('Not all files processed. Check again later.')
 		return False
 
-def clean_clustering_partial_data(work_dir, db_name):
+def clean_clustering_partial_data(work_dir, db_name, run_mode=None):
 	"""Clean directory with single protein dataframes. Saves space.
 
 	Parameters:
 	-----------
 	work_dir : string
 		Path to the working directory.
+	db_name : string
+		Name of the database results to parse. If None then assume it is
+		all-vs-all run and parse files from all-vs-all results dir.
+	run_mode : string
+		Mode of run [hhblits/mmseqs]. Needed to set correct input path. Only
+		used when parsing results of all-vs-all.
 
 	Returns:
 	--------
 	"""
-	results_dirpath = work_dir \
-	+ '/intermediate/prot-families/functional/hhrs/{}'.format(db_name)
+	if db_name:
+		results_dirpath = work_dir \
+		+ '/intermediate/prot-families/functional/hhrs/{}'.format(db_name)
+	else:
+		results_dirpath = work_dir \
+		+ '/intermediate/prot-families/all-by-all/{}'.format(run_mode)
 
 	if len(glob.glob(results_dirpath + '/*.txt')) > 0:
 		print('Clearing parsing partial files...')
