@@ -253,7 +253,7 @@ def create_bash_script_to_parse_hhr_results(work_dir, pipeline_env_path,
 	cmd += 'source ' + pipeline_env_path + '/bin/activate\n'
 	cmd += 'python3 ' + pipeline_env_path \
 	+ '/phage-pipeline/lib_phage/run_parsing_db_single_protein.py ${1} ' \
-	+ ecf + ' ' + lib_pp_path + '\n'
+	+ str(ecf) + ' ' + lib_pp_path + '\n'
 
 	with open(script_filepath, 'w') as file_sh:
 		file_sh.write(cmd)
