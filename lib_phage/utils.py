@@ -343,7 +343,7 @@ def concatenate_parsing_results(work_dir, db_name, run_mode=None,
 		results_dirpath = work_dir \
 		+ '/intermediate/prot-families/all-by-all/{}'.format(run_mode)
 		hhr_table_filpath  = '{}/{}.txt'.format(work_dir
-		+ '/output/prot-families/all-by-all/' + db_name, results_filename)
+		+ '/output/prot-families/all-by-all/' + run_mode, results_filename)
 	nb_expected_files  = len(glob.glob(results_dirpath + '/*.hhr'))
 	nb_complete_files  = len(glob.glob(results_dirpath + '/*.txt'))
 
