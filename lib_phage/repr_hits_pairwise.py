@@ -1,8 +1,8 @@
 import pandas as pd
 import numpy as np
 
-def get_prob_cov(pair_hits, prob_threshold = 50):
-
+def get_prob_cov(pair_hits, prob_threshold=50, ecf=False):
+    """FIXME: add docstring"""
     no_hits = len(pair_hits)
     out = []
     if no_hits == 0:
@@ -17,6 +17,17 @@ def get_prob_cov(pair_hits, prob_threshold = 50):
             hit_scov = hit_scov.iloc[0]
             hit_qcov = hit_qcov.iloc[0]
             hit_pident = pair_hits['pident'].iloc[0] / 100
+        elif ecf:
+            # take only the longest hit for ECF qcov/scov calculations
+            pair_hits = pair_hits.assign(qcov = lambda x: (x.qend - x.qstart + 1) / x.qlength)
+            longest_hit = pair_hits[pair_hits['qcov'] == pair_hits['qcov'].max()]
+
+            hit_prob = longest_hit['prob'].iloc[0] / 100
+            hit_scov = abs(longest_hit['send'] - longest_hit['sstart'] + 1) / subject_len
+            hit_qcov = abs(longest_hit['qend'] - longest_hit['qstart'] + 1) / query_len
+            hit_scov = hit_scov.iloc[0]
+            hit_qcov = hit_qcov.iloc[0]
+            hit_pident = longest_hit['pident'].iloc[0] / 100
         else:
             # subject
             prob_per_pos = pd.DataFrame()
