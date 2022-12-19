@@ -166,7 +166,7 @@ def build_hh_db(work_dir, hhsuite_bins, hhsuite_scripts, run_mode, verbose=False
             if validate_db_creation(work_dir, db_dirpath):
                 print('DB successfuly created.')
 
-def run_all_vs_all(work_dir, hhsuite_bins, hhsuite_scripts, cpu, n, p, a3m_wildcard, run_mode):
+def run_all_vs_all(work_dir, hhsuite_bins, hhsuite_scripts, cpu, n, p, a3m_wildcard, run_mode, hh_mode='hhblits'):
 
     """Run HMM comparison of all representative proteins agains each other."""
 
@@ -200,8 +200,12 @@ def run_all_vs_all(work_dir, hhsuite_bins, hhsuite_scripts, cpu, n, p, a3m_wildc
     cmd0 = '#!/bin/bash\n\n'
     cmd0 = cmd0 + 'export PATH="{}:{}:$PATH"\n\n'.format(hhsuite_bins, hhsuite_scripts)
     cmd1 = 'FILE=$(basename "${1}")\nFILE=${FILE%.*}\n'
-    cmd2 = '{}/hhblits -cpu 2 -i $1 -d {}/all_proteins -o {} -n {} -p {} -z 0 -Z 32000 -v 0 -b 0 -B 32000 &> {}'.format(
-    hhsuite_bins, db_dirpath, out_hhr, n, p, output)
+    if hh_mode == 'hhblits':
+        cmd2 = '{}/hhblits -cpu 2 -i $1 -d {}/all_proteins -o {} -n {} -p {} -z 0 -Z 32000 -v 0 -b 0 -B 32000 &> {}'.format(
+        hhsuite_bins, db_dirpath, out_hhr, n, p, output)
+    elif hh_mode == 'hhsearch':
+        cmd2 = '{}/hhsearch -cpu 2 -i $1 -d {}/all_proteins -o {} -p {} -z 0 -Z 32000 -v 0 -b 0 -B 32000 &> {}'.format(
+        hhsuite_bins, db_dirpath, out_hhr, p, output)
 
     fb = open(bash_script_filepath, 'w')
     for cmd in [cmd0, cmd1, cmd2]:
