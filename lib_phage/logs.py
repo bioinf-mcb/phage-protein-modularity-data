@@ -85,6 +85,7 @@ def check_input_all_vs_all_HMM(work_dir, force=False):
         print('Failed to fetch log file, aborting.')
         return False
 
+    """ this should check if data already there, not sure if needed
     # check if data already exist
     output_hhblits_dirpath = work_dir + 'intermediate/prot-families/all-by-all'
 
@@ -101,6 +102,7 @@ def check_input_all_vs_all_HMM(work_dir, force=False):
         if len(os.listdir(output_hhblits_dirpath) ) != 0:
             print('This step was already executed. Run validation fucntion with force=True to overwrite.')
             return False
+    """
 
     return True
 
