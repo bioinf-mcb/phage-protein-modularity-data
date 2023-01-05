@@ -8,7 +8,7 @@ if __name__ == '__main__':
     pair_table_id = sys.argv[3]
     prob_threshold = int(sys.argv[4])
     n_subsets = int(sys.argv[5])
-    ecf = bool(sys.argv[6])
+    ecf = bool(eval(sys.argv[6]))
 
     sys.path.append(sys.argv[7])
     from lib_phage.repr_hits_pairwise import get_prob_cov
