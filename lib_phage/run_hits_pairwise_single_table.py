@@ -49,16 +49,31 @@ if __name__ == '__main__':
             no_hits_ba = this_pair_prob_cov_ba[4]
 
             this_pair_prob = np.nanmin([prob_ab, prob_ba])
-            this_pair_scov = np.nanmin([scov_ab, scov_ba])
-            this_pair_qcov = np.nanmin([qcov_ab, qcov_ba])
             this_pair_pident = np.nanmin([pident_ab, pident_ba])
 
-            pair_results[i] = [this_pair_qname, this_pair_sname, this_pair_qcov,
-                               this_pair_scov, this_pair_prob, this_pair_pident,
+            this_pair_scov_min = np.nanmin([scov_ab, scov_ba])
+            this_pair_scov_max = np.nanmax([scov_ab, scov_ba])
+            this_pair_qcov_min = np.nanmin([qcov_ab, qcov_ba])
+            this_pair_qcov_max = np.nanmax([qcov_ab, qcov_ba])
+            both_cov_max = np.nanmax([this_pair_scov_max, this_pair_qcov_max])
+            both_cov_min = np.nanmin([this_pair_scov_min, this_pair_qcov_min])
+
+            pair_results[i] = [this_pair_qname, this_pair_sname,
+                               this_pair_prob,
+                               this_pair_scov_min, this_pair_scov_max,
+                               this_pair_qcov_min, this_pair_qcov_max,
+                               this_pair_pident,
+                               both_cov_max, both_cov_min,
                                no_hits_ab, no_hits_ba]
 
         ### now to dataframe and drop to file
         output_filename = 'repr-hits-pairwise-prob' + str(prob_threshold) + '-' + str(pair_table_id) + '-' + str(j) + '.txt'
-        pair_results_df = pd.DataFrame.from_dict(pair_results, orient='index',
-                                                 columns=['qname', 'sname', 'qcov', 'scov', 'prob', 'pident', 'no_hits_ab', 'no_hits_ba'])
+        pair_results_df = pd.DataFrame.from_dict(pair_results, orient='index',                                                 
+                                                 columns=['qname', 'sname',
+                                                          'prob',
+                                                          'scov_min', 'scov_max',
+                                                          'qcov_min', 'qcov_max',
+                                                          'pident',
+                                                          'max_cov', 'min_cov',
+                                                          'no_hits_ab', 'no_hits_ba'])
         pair_results_df.to_csv(families_output_dir + output_filename, index=False, header=False, float_format="%.4f")
