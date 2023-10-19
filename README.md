@@ -1,4 +1,4 @@
-# Phage pipeline repo - v1.0
+# Phage pipeline repo: v1.0
 Contains pipeline going from protein data through mmseqs2 clustering and
 profile construction, all vs all HMM comparison to pairwise coverage comparison.
 
